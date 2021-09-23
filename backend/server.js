@@ -7,7 +7,7 @@ const CronJob = require("cron").CronJob;
 const cors = require("cors");
 const admin = require("firebase-admin");
 const Logger = require("./handlers/logger.js");
-const serviceAccount = require("./credentials/serviceAccountKey.json");
+const serviceAccount = require("./credentials/serviceAccountKey.js");
 const { connectDB, mongoDB } = require("./init/mongodb");
 const BotDAO = require("./dao/bot");
 

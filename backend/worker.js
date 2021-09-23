@@ -7,7 +7,7 @@ config({ path: path.join(__dirname, ".env") });
 const cors = require("cors");
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./credentials/serviceAccountKey.json");
+const serviceAccount = require("./credentials/serviceAccountKey.js");
 const { connectDB, mongoDB } = require("./init/mongodb");
 
 const PORT = process.env.PORT || 5005;
