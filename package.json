@@ -7,7 +7,8 @@
     "build": "npx gulp build",
     "start:dev": "npm run build && concurrently --kill-others \"npx gulp watch\" \"nodemon --watch ./backend ./backend/server.js\" \"firebase serve --only hosting\"",
     "start:dev:nodb": "npm run build && concurrently --kill-others \"npx gulp watch\" \"firebase serve --only hosting\"",
-    "deploy:live": "npm run build && firebase deploy -P live --only hosting"
+    "deploy:live": "npm run build && firebase deploy -P live --only hosting",
+    "start": "node ./backend/server.js"
   },
   "engines": {
     "node": "14.17.3",
@@ -17,6 +18,7 @@
     "@babel/core": "^7.12.3",
     "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
@@ -28,6 +30,7 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-react": "^7.26.0",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^6.0.0",
@@ -35,6 +38,7 @@
     "husky": "^4.3.0",
     "prettier": "2.1.2",
     "pretty-quick": "^3.1.0",
+    "typescript": "^4.4.3",
     "vinyl-buffer": "^1.0.1",
     "vinyl-paths": "^3.0.1",
     "vinyl-source-stream": "^2.0.0"
