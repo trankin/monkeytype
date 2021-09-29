@@ -3,7 +3,7 @@ import axios from "axios";
 let baseURL;
 if (window.location.hostname === "localhost") {
   baseURL = "http://localhost:5005";
-} else if (window.location.hostname === "monkeytype-api.herokuapp.com") {
+} else if (window.location.hostname === "monkeytype-235e6.web.app") {
   baseURL = "https://monkeytype-api.herokuapp.com"
 } else {
   baseURL = "https://api.monkeytype.com";
