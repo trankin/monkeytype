@@ -7,6 +7,7 @@ const {
 const MonkeyError = require("../../handlers/error");
 const fetch = require("node-fetch");
 const Logger = require("./../../handlers/logger.js");
+const uaparser = require("ua-parser-js");
 
 // import UsersDAO from "../../dao/user";
 // import BotDAO from "../../dao/bot";
@@ -113,7 +114,31 @@ class UserController {
           );
         }
       }
-      Logger.log("user_data_requested", ``, uid);
+      let agent = uaparser(req.headers["user-agent"]);
+      let logobj = {
+        ip:
+          req.headers["cf-connecting-ip"] ||
+          req.headers["x-forwarded-for"] ||
+          req.ip ||
+          "255.255.255.255",
+        agent:
+          agent.os.name +
+          " " +
+          agent.os.version +
+          " " +
+          agent.browser.name +
+          " " +
+          agent.browser.version,
+      };
+      if (agent.device.vendor) {
+        logobj.device =
+          agent.device.vendor +
+          " " +
+          agent.device.model +
+          " " +
+          agent.device.type;
+      }
+      Logger.log("user_data_requested", logobj, uid);
       return res.status(200).json(userInfo);
     } catch (e) {
       return next(e);

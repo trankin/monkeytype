@@ -22,7 +22,10 @@ let eslintConfig = {
     "ClipboardItem",
   ],
   envs: ["es6", "browser", "node"],
+  plugins: ["json"],
+  extends: ["plugin:json/recommended"],
   rules: {
+    "json/*": ["error"],
     "constructor-super": "error",
     "for-direction": "error",
     "getter-return": "error",
@@ -129,6 +132,7 @@ const refactoredSrc = [
   "./src/js/elements/new-version-notification.js",
 
   "./src/js/popups/custom-text-popup.js",
+  "./src/js/popups/pb-tables-popup.js",
   "./src/js/popups/quote-search-popup.js",
   "./src/js/popups/rate-quote-popup.js",
   "./src/js/popups/version-popup.js",
@@ -175,6 +179,7 @@ const refactoredSrc = [
   "./src/js/test/today-tracker.js",
   "./src/js/test/weak-spot.js",
   "./src/js/test/wordset.js",
+  "./src/js/test/tts.js",
   "./src/js/replay.js",
 ];
 
@@ -194,6 +199,7 @@ task("cat", function () {
 
 task("sass", function () {
   return src("./src/sass/*.scss")
+    .pipe(concat("style.scss"))
     .pipe(sass({ outputStyle: "compressed" }).on("error", sass.logError))
     .pipe(dest("dist/css"));
 });
@@ -232,7 +238,9 @@ task("browserify", function () {
 
 //lints only the refactored files
 task("lint", function () {
-  return src(refactoredSrc)
+  let filelist = refactoredSrc;
+  filelist.push("./static/**/*.json");
+  return src(filelist)
     .pipe(eslint(eslintConfig))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
