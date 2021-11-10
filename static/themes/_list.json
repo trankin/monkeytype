@@ -541,8 +541,8 @@
   },
   {
     "name": "midnight",
-    "bgColor": "#0c0e12",
-    "textColor": "#525f7a"
+    "bgColor": "#0b0e13",
+    "textColor": "#9fadc6"
   },
   {
     "name": "blueberry_light",
@@ -608,5 +608,10 @@
     "name" : "chaos_theory",
     "bgColor" : "#141221",
     "textColor":"#fd77d7"
+  },
+  {
+    "name" : "hanok",
+    "bgColor" : "#d8d2c3",
+    "textColor":"#513a2a"
   }
 ]

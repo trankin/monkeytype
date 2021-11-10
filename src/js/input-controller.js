@@ -32,8 +32,24 @@ function setWordsInput(value) {
   // Only change #wordsInput if it's not already the wanted value
   // Avoids Safari triggering unneeded events, causing issues with
   // dead keys.
+  // console.log("settings words input to " + value);
   if (value !== $("#wordsInput").val()) {
     $("#wordsInput").val(value);
+  }
+}
+
+function updateUI() {
+  let acc = Misc.roundTo2(TestStats.calculateAccuracy());
+  if (!isNaN(acc)) LiveAcc.update(acc);
+
+  if (Config.keymapMode === "next" && Config.mode !== "zen") {
+    Keymap.highlightKey(
+      TestLogic.words
+        .getCurrent()
+        .charAt(TestLogic.input.current.length)
+        .toString()
+        .toUpperCase()
+    );
   }
 }
 
@@ -382,16 +398,15 @@ function handleChar(char, charIndex) {
     char +
     TestLogic.input.current.substring(charIndex + 1);
 
+  MonkeyPower.addPower(thisCharCorrect);
+  TestStats.incrementAccuracy(thisCharCorrect);
+
   if (!thisCharCorrect && Misc.trailingComposeChars.test(resultingWord)) {
     TestLogic.input.current = resultingWord;
-    setWordsInput(" " + TestLogic.input.current);
     TestUI.updateWordElement();
     Caret.updatePosition();
     return;
   }
-
-  MonkeyPower.addPower(thisCharCorrect);
-  TestStats.incrementAccuracy(thisCharCorrect);
 
   if (!thisCharCorrect) {
     TestStats.incrementKeypressErrors();
@@ -457,7 +472,6 @@ function handleChar(char, charIndex) {
       charIndex < TestLogic.words.getCurrent().length + 20)
   ) {
     TestLogic.input.current = resultingWord;
-    setWordsInput(" " + TestLogic.input.current);
   }
 
   if (!thisCharCorrect && Config.difficulty == "master") {
@@ -529,8 +543,6 @@ function handleChar(char, charIndex) {
   if (char !== "\n") {
     Caret.updatePosition();
   }
-
-  setWordsInput(" " + TestLogic.input.current);
 }
 
 function handleTab(event) {
@@ -564,6 +576,7 @@ function handleTab(event) {
     !TestUI.resultCalculating &&
     $("#commandLineWrapper").hasClass("hidden") &&
     $("#simplePopupWrapper").hasClass("hidden") &&
+    $("#quoteSubmitPopupWrapper").hasClass("hidden") &&
     !$(".page.pageLogin").hasClass("active")
   ) {
     if ($(".pageTest").hasClass("active")) {
@@ -593,6 +606,7 @@ function handleTab(event) {
         } else {
           event.preventDefault();
           handleChar("\t", TestLogic.input.current.length);
+          setWordsInput(" " + TestLogic.input.current);
         }
       } else if (!TestUI.resultVisible) {
         if (
@@ -605,6 +619,7 @@ function handleTab(event) {
         } else {
           event.preventDefault();
           handleChar("\t", TestLogic.input.current.length);
+          setWordsInput(" " + TestLogic.input.current);
         }
       }
     } else if (Config.quickTab) {
@@ -624,6 +639,8 @@ $(document).keydown((event) => {
     !$("#customWordAmountPopupWrapper").hasClass("hidden") ||
     !$("#customTestDurationPopupWrapper").hasClass("hidden") ||
     !$("#quoteSearchPopupWrapper").hasClass("hidden") ||
+    !$("#quoteSubmitPopupWrapper").hasClass("hidden") ||
+    !$("#quoteApprovePopupWrapper").hasClass("hidden") ||
     !$("#wordFilterPopupWrapper").hasClass("hidden");
 
   const allowTyping =
@@ -634,7 +651,7 @@ $(document).keydown((event) => {
     !TestUI.resultVisible &&
     (wordsFocused || event.key !== "Enter");
 
-  if (allowTyping && !wordsFocused) {
+  if (allowTyping && !wordsFocused && !$("#restartTestButton").is(":focus")) {
     TestUI.focusWords();
     if (Config.showOutOfFocusWarning) {
       event.preventDefault();
@@ -671,6 +688,11 @@ $(document).keydown((event) => {
     ) {
       event.preventDefault();
     }
+
+    if (Config.confidenceMode === "max") {
+      event.preventDefault();
+      return;
+    }
   }
 
   Monkey.type();
@@ -693,6 +715,7 @@ $(document).keydown((event) => {
       TestLogic.finish();
     } else {
       handleChar("\n", TestLogic.input.current.length);
+      setWordsInput(" " + TestLogic.input.current);
     }
   }
 
@@ -709,25 +732,23 @@ $(document).keydown((event) => {
     ).toggleClass("dead");
   }
 
-  if (Config.oppositeShiftMode === "on") {
+  if (Config.oppositeShiftMode !== "off") {
     correctShiftUsed = ShiftTracker.isUsingOppositeShift(event) !== false;
   }
 
-  if (Config.layout !== "default") {
+  if (
+    Config.layout !== "default" &&
+    !(
+      event.ctrlKey ||
+      (event.altKey && window.navigator.platform.search("Linux") > -1)
+    )
+  ) {
     const char = LayoutEmulator.getCharFromEvent(event);
     if (char !== null) {
       event.preventDefault();
       handleChar(char, TestLogic.input.current.length);
-    }
-
-    if (Config.keymapMode === "next" && Config.mode !== "zen") {
-      Keymap.highlightKey(
-        TestLogic.words
-          .getCurrent()
-          .charAt(TestLogic.input.current.length)
-          .toString()
-          .toUpperCase()
-      );
+      updateUI();
+      setWordsInput(" " + TestLogic.input.current);
     }
   }
 });
@@ -766,6 +787,17 @@ $("#wordsInput").on("input", (event) => {
   const realInputValue = event.target.value.normalize();
   const inputValue = realInputValue.slice(1);
 
+  // input will be modified even with the preventDefault() in
+  // beforeinput/keydown if it's part of a compose sequence. this undoes
+  // the effects of that and takes the input out of compose mode.
+  if (
+    Config.layout !== "default" &&
+    inputValue.length >= TestLogic.input.current.length
+  ) {
+    setWordsInput(" " + TestLogic.input.current);
+    return;
+  }
+
   if (realInputValue.length === 0 && TestLogic.input.current.length === 0) {
     // fallback for when no Backspace keydown event (mobile)
     backspaceToPrevious();
@@ -787,19 +819,7 @@ $("#wordsInput").on("input", (event) => {
   }
 
   setWordsInput(" " + TestLogic.input.current);
-
-  let acc = Misc.roundTo2(TestStats.calculateAccuracy());
-  LiveAcc.update(acc);
-
-  if (Config.keymapMode === "next" && Config.mode !== "zen") {
-    Keymap.highlightKey(
-      TestLogic.words
-        .getCurrent()
-        .charAt(TestLogic.input.current.length)
-        .toString()
-        .toUpperCase()
-    );
-  }
+  updateUI();
 
   // force caret at end of input
   // doing it on next cycle because Chromium on Android won't let me edit

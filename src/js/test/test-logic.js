@@ -954,7 +954,15 @@ export function restart(
         Replay.stopReplayRecording();
         words.resetCurrentIndex();
         input.reset();
-        await Funbox.activate();
+        if (Config.funbox === "plus_one" || Config.funbox === "plus_two") {
+          Notifications.add(
+            "Sorry, this funbox won't work with repeated tests.",
+            0
+          );
+          await Funbox.activate("none");
+        } else {
+          await Funbox.activate();
+        }
         TestUI.showWords();
         PaceCaret.init();
       }
@@ -1142,12 +1150,16 @@ export async function addWord() {
   } else if (Config.mode === "quote") {
     randomWord = randomQuote.textSplit[words.length];
   } else {
+    let regenarationCount = 0; //infinite loop emergency stop button
     while (
+      regenarationCount < 100 &&
+      (
       previousWordStripped == randomWord ||
       previousWord2Stripped == randomWord ||
       randomWord.indexOf(" ") > -1 ||
-      (!Config.punctuation && randomWord == "I")
+      (!Config.punctuation && randomWord == "I"))
     ) {
+      regenarationCount++;
       randomWord = wordset.randomWord();
     }
   }
@@ -1162,6 +1174,10 @@ export async function addWord() {
   ) {
     let britishWord = await BritishEnglish.replace(randomWord);
     if (britishWord) randomWord = britishWord;
+  }
+
+  if (Config.lazyMode === true && !language.noLazyMode) {
+    randomWord = LazyMode.replaceAccents(randomWord, language.accents);
   }
 
   if (Config.funbox === "rAnDoMcAsE") {
@@ -1288,29 +1304,39 @@ export async function finish(difficultyFailed = false) {
       if (inf) {
         $("#result .stats .wpm .bottom").text("Infinite");
       } else {
-        $("#result .stats .wpm .bottom").text(Misc.roundTo2(stats.wpm));
+        $("#result .stats .wpm .bottom").text(
+          Misc.roundTo2(stats.wpm).toFixed(2)
+        );
       }
-      $("#result .stats .raw .bottom").text(Misc.roundTo2(stats.wpmRaw));
+      $("#result .stats .raw .bottom").text(
+        Misc.roundTo2(stats.wpmRaw).toFixed(2)
+      );
       $("#result .stats .wpm .bottom").attr(
         "aria-label",
-        Misc.roundTo2(stats.wpm * 5) + " cpm"
+        Misc.roundTo2(stats.wpm * 5).toFixed(2) + " cpm"
       );
     } else {
       $("#result .stats .wpm .top .text").text("cpm");
       if (inf) {
         $("#result .stats .wpm .bottom").text("Infinite");
       } else {
-        $("#result .stats .wpm .bottom").text(Misc.roundTo2(stats.wpm * 5));
+        $("#result .stats .wpm .bottom").text(
+          Misc.roundTo2(stats.wpm * 5).toFixed(2)
+        );
       }
-      $("#result .stats .raw .bottom").text(Misc.roundTo2(stats.wpmRaw * 5));
+      $("#result .stats .raw .bottom").text(
+        Misc.roundTo2(stats.wpmRaw * 5).toFixed(2)
+      );
       $("#result .stats .wpm .bottom").attr(
         "aria-label",
-        Misc.roundTo2(stats.wpm) + " wpm"
+        Misc.roundTo2(stats.wpm).toFixed(2) + " wpm"
       );
     }
 
-    $("#result .stats .acc .bottom").text(Misc.roundTo2(stats.acc) + "%");
-    let time = Misc.roundTo2(testtime) + "s";
+    $("#result .stats .acc .bottom").text(
+      stats.acc == 100 ? "100%" : Misc.roundTo2(stats.acc).toFixed(2) + "%"
+    );
+    let time = Misc.roundTo2(testtime).toFixed(2) + "s";
     if (testtime > 61) {
       time = Misc.secondsToString(Misc.roundTo2(testtime));
     }
@@ -1460,11 +1486,11 @@ export async function finish(difficultyFailed = false) {
 
   if (Config.alwaysShowDecimalPlaces) {
     $("#result .stats .consistency .bottom").text(
-      Misc.roundTo2(consistency) + "%"
+      Misc.roundTo2(consistency).toFixed(2) + "%"
     );
     $("#result .stats .consistency .bottom").attr(
       "aria-label",
-      `${keyConsistency}% key`
+      `${keyConsistency.toFixed(2)}% key`
     );
   } else {
     $("#result .stats .consistency .bottom").text(
@@ -1738,7 +1764,9 @@ export async function finish(difficultyFailed = false) {
               }
             }
             let themecolors = await ThemeColors.get();
-            let chartlpb = Config.alwaysShowCPM ? lpb * 5 : lpb;
+            let chartlpb = Misc.roundTo2(
+              Config.alwaysShowCPM ? lpb * 5 : lpb
+            ).toFixed(2);
             if (lpb > 0) {
               ChartController.result.options.annotation.annotations.push({
                 enabled: false,
@@ -1764,10 +1792,10 @@ export async function finish(difficultyFailed = false) {
                 },
               });
               if (
-                maxChartVal >= chartlpb - 15 &&
-                maxChartVal <= chartlpb + 15
+                maxChartVal >= parseFloat(chartlpb) - 20 &&
+                maxChartVal <= parseFloat(chartlpb) + 20
               ) {
-                maxChartVal = chartlpb + 15;
+                maxChartVal = parseFloat(chartlpb) + 20;
               }
               ChartController.result.options.scales.yAxes[0].ticks.max = Math.round(
                 maxChartVal
@@ -1844,9 +1872,9 @@ export async function finish(difficultyFailed = false) {
                       position: annotationSide,
                       xAdjust: labelAdjust,
                       enabled: true,
-                      content: `${tag.name} PB: ${
+                      content: `${tag.name} PB: ${Misc.roundTo2(
                         Config.alwaysShowCPM ? tpb * 5 : tpb
-                      }`,
+                      ).toFixed(2)}`,
                     },
                   });
                   if (annotationSide === "left") {

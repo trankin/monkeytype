@@ -47,8 +47,13 @@ class UserController {
           message:
             "Username invalid. Name cannot contain special characters or contain more than 14 characters. Can include _ . and -",
         });
+      let olduser = await UsersDAO.getUser(uid);
       await UsersDAO.updateName(uid, name);
-      Logger.log("user_name_updated", `changed name to ${name}`, uid);
+      Logger.log(
+        "user_name_updated",
+        `changed name from ${olduser.name} to ${name}`,
+        uid
+      );
       return res.sendStatus(200);
     } catch (e) {
       return next(e);
@@ -239,6 +244,11 @@ class UserController {
     try {
       const { uid } = req.decodedToken;
       const { tagid, newname } = req.body;
+      if (!isTagPresetNameValid(newname))
+        return res.status(400).json({
+          message:
+            "Tag name invalid. Name cannot contain special characters or more than 16 characters. Can include _ . and -",
+        });
       await UsersDAO.editTag(uid, tagid, newname);
       return res.sendStatus(200);
     } catch (e) {

@@ -156,7 +156,6 @@
     .word {
       //flex-direction: row-reverse;
       direction: rtl;
-      font-family: "Lalezar";
     }
   }
   &.withLigatures {
@@ -561,7 +560,6 @@
         .word {
           //flex-direction: row-reverse;
           direction: rtl;
-          font-family: "Lalezar";
         }
       }
       &.withLigatures {
@@ -621,8 +619,8 @@
     //   "wpm raw time nothing infoAndTags leaderboards source";
     grid-template-areas:
       "wpm"
-      "acc"
-      "burst";
+      "acc";
+    margin-bottom: 1rem;
 
     &.morestats {
       display: grid;

@@ -615,13 +615,18 @@ export function updateModesNotice() {
 
   if (Config.layout !== "default") {
     $(".pageTest #testModesNotice").append(
-      `<div class="text-button" commands="commandsLayouts"><i class="fas fa-keyboard"></i>${Config.layout}</div>`
+      `<div class="text-button" commands="commandsLayouts"><i class="fas fa-keyboard"></i>emulating ${Config.layout.replace(
+        /_/g,
+        " "
+      )}</div>`
     );
   }
 
-  if (Config.oppositeShiftMode === "on") {
+  if (Config.oppositeShiftMode !== "off") {
     $(".pageTest #testModesNotice").append(
-      `<div class="text-button" commands="commandsOppositeShiftMode"><i class="fas fa-exchange-alt"></i>opposite shift</div>`
+      `<div class="text-button" commands="commandsOppositeShiftMode"><i class="fas fa-exchange-alt"></i>opposite shift${
+        Config.oppositeShiftMode === "keymap" ? " (keymap)" : ""
+      }</div>`
     );
   }
 
@@ -971,7 +976,9 @@ $(document).on("mouseenter", "#resultWordsHistory .words .word", (e) => {
             .replace(/>/g, "&gt")}
           </div>
           <div class="speed">
-          ${burst}wpm
+          ${Math.round(Config.alwaysShowCPM ? burst * 5 : burst)}${
+          Config.alwaysShowCPM ? "cpm" : "wpm"
+        }
           </div>
           </div>`
       );
